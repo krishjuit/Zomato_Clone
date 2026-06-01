@@ -1,19 +1,35 @@
 import express from "express";
-import { allOrders, placeOrder, updateStatus, userOrders, verifyOrder } from "../controllers/orderController.js";
+import {
+  allOrders,
+  placeOrder,
+  updateStatus,
+  userOrders,
+  verifyOrder,
+  getVendorPendingOrders,
+  getVendorOrderHistory,
+  acceptOrder,
+  rejectOrder,
+  updateVendorOrderStatus,
+} from "../controllers/orderController.js";
 import authMiddleware from "../middleware/auth.js";
+import roleAuth from "../middleware/roleAuth.js";
 
 const orderRouter = express.Router();
 
 orderRouter.post("/place", authMiddleware, placeOrder);
-
 orderRouter.post("/verify", verifyOrder);
+orderRouter.post("/userorders", authMiddleware, userOrders);
 
-orderRouter.post("/userorders",authMiddleware,userOrders);
-;
-orderRouter.get("/allorders", allOrders);
+// Superadmin only
+orderRouter.get("/allorders", authMiddleware, roleAuth(["superadmin"]), allOrders);
 
-orderRouter.post(
-  "/updatestatus",
-  updateStatus
-);
+// Vendor only
+orderRouter.get("/vendor/pending", authMiddleware, roleAuth(["vendor"]), getVendorPendingOrders);
+orderRouter.get("/vendor/history", authMiddleware, roleAuth(["vendor"]), getVendorOrderHistory);
+orderRouter.put("/vendor/accept/:id", authMiddleware, roleAuth(["vendor"]), acceptOrder);
+orderRouter.put("/vendor/reject/:id", authMiddleware, roleAuth(["vendor"]), rejectOrder);
+orderRouter.put("/vendor/status/:id", authMiddleware, roleAuth(["vendor"]), updateVendorOrderStatus);
+
+// Deprecated, kept for backward compatibility
+orderRouter.post("/updatestatus", updateStatus);
 export default orderRouter;

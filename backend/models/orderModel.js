@@ -8,6 +8,12 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
+    restaurant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "restaurant",
+      required: true,
+    },
+
     items: [
       {
         food: {
@@ -43,7 +49,17 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      default: "Food Processing",
+      enum: [
+        "PLACED",
+        "ACCEPTED",
+        "REJECTED",
+        "PREPARING",
+        "READY",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+        "CANCELLED"
+      ],
+      default: "PLACED",
     },
 
     payment: {

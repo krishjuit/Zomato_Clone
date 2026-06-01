@@ -3,19 +3,20 @@ import bcrypt from "bcryptjs";
 import foodModel from "../models/foodModel.js";
 import userModel from "../models/userModel.js";
 import restaurantModel from "../models/restaurantModel.js";
+import orderModel from "../models/orderModel.js";
 
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URL);
     console.log("MongoDB connected successfully");
 
-    // Auto-migration for legacy foods
-    const orphanedFoodsCount = await foodModel.countDocuments({ restaurant: { $exists: false } });
-    if (orphanedFoodsCount > 0) {
-      console.log(`Found ${orphanedFoodsCount} legacy food items without a restaurant reference. Starting auto-migration...`);
+    // Ensure default vendor & restaurant exist for migrations if needed
+    let defaultVendor = null;
+    let defaultRestaurant = null;
 
-      // Find or create default vendor
-      let defaultVendor = await userModel.findOne({ email: "default_vendor@zomato.com" });
+    const setupDefaultRestaurant = async () => {
+      if (defaultRestaurant) return defaultRestaurant;
+      defaultVendor = await userModel.findOne({ email: "default_vendor@zomato.com" });
       if (!defaultVendor) {
         console.log("Creating default vendor account...");
         const hashedPassword = await bcrypt.hash("vendor123", 10);
@@ -27,8 +28,7 @@ const connectDB = async () => {
         });
       }
 
-      // Find or create default restaurant
-      let defaultRestaurant = await restaurantModel.findOne({ owner: defaultVendor._id });
+      defaultRestaurant = await restaurantModel.findOne({ owner: defaultVendor._id });
       if (!defaultRestaurant) {
         console.log("Creating default restaurant profile...");
         defaultRestaurant = await restaurantModel.create({
@@ -40,13 +40,49 @@ const connectDB = async () => {
           cuisine: ["Varies"],
         });
       }
+      return defaultRestaurant;
+    };
 
-      // Assign foods
+    // Auto-migration for legacy foods
+    const orphanedFoodsCount = await foodModel.countDocuments({ restaurant: { $exists: false } });
+    if (orphanedFoodsCount > 0) {
+      console.log(`Found ${orphanedFoodsCount} legacy food items without a restaurant reference. Starting auto-migration...`);
+      const rest = await setupDefaultRestaurant();
       const updateResult = await foodModel.updateMany(
         { restaurant: { $exists: false } },
-        { $set: { restaurant: defaultRestaurant._id } }
+        { $set: { restaurant: rest._id } }
       );
       console.log(`Auto-migration completed successfully! Assigned ${updateResult.modifiedCount} items to Default Kitchen.`);
+    }
+
+    // Auto-migration for legacy orders
+    const orphanedOrdersCount = await orderModel.countDocuments({ restaurant: { $exists: false } });
+    if (orphanedOrdersCount > 0) {
+      console.log(`Found ${orphanedOrdersCount} legacy orders without a restaurant reference. Starting auto-migration...`);
+      const rest = await setupDefaultRestaurant();
+
+      const legacyOrders = await orderModel.find({ restaurant: { $exists: false } });
+      let migratedCount = 0;
+      for (const order of legacyOrders) {
+        let mappedStatus = "PLACED";
+        if (order.status === "Food Processing") {
+          mappedStatus = "PLACED";
+        } else if (order.status === "Confirmed") {
+          mappedStatus = "ACCEPTED";
+        } else if (order.status === "Cancelled") {
+          mappedStatus = "CANCELLED";
+        } else if (order.status === "Delivered") {
+          mappedStatus = "DELIVERED";
+        } else {
+          mappedStatus = "PLACED";
+        }
+
+        order.restaurant = rest._id;
+        order.status = mappedStatus;
+        await order.save();
+        migratedCount++;
+      }
+      console.log(`Auto-migration of orders completed! Migrated ${migratedCount} orders.`);
     }
   } catch (error) {
     console.error("MongoDB connection / migration error:", error);
