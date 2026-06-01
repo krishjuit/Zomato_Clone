@@ -4,6 +4,7 @@ import foodModel from "../models/foodModel.js";
 import userModel from "../models/userModel.js";
 import restaurantModel from "../models/restaurantModel.js";
 import orderModel from "../models/orderModel.js";
+import orderStatusHistoryModel from "../models/orderStatusHistoryModel.js";
 
 const connectDB = async () => {
   try {
@@ -80,6 +81,15 @@ const connectDB = async () => {
         order.restaurant = rest._id;
         order.status = mappedStatus;
         await order.save();
+
+        // Create OrderStatusHistory for migrated order
+        const history = new orderStatusHistoryModel({
+          order: order._id,
+          status: mappedStatus,
+          updatedBy: order.user || defaultVendor._id,
+        });
+        await history.save();
+
         migratedCount++;
       }
       console.log(`Auto-migration of orders completed! Migrated ${migratedCount} orders.`);

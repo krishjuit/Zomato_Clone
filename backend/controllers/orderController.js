@@ -149,6 +149,14 @@ export const verifyOrder = async (req, res) => {
     } else {
       order.status = "CANCELLED";
       order.payment = false;
+
+      // Log status history
+      const history = new orderStatusHistoryModel({
+        order: order._id,
+        status: "CANCELLED",
+        updatedBy: order.user,
+      });
+      await history.save();
     }
 
     await order.save();
@@ -413,6 +421,14 @@ export const updateStatus = async (req, res) => {
 
     order.status = status;
     await order.save();
+
+    // Log status history
+    const history = new orderStatusHistoryModel({
+      order: order._id,
+      status: status,
+      updatedBy: req.userId || order.user,
+    });
+    await history.save();
 
     return res.status(200).json({
       success: true,

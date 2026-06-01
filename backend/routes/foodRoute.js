@@ -18,9 +18,9 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-foodRouter.post("/add", authMiddleware, roleAuth(["vendor", "superadmin"]), upload.single("image"), addFood);
-foodRouter.post("/remove/:id", authMiddleware, roleAuth(["vendor", "superadmin"]), removeFood);
-foodRouter.put("/update/:id", authMiddleware, roleAuth(["vendor", "superadmin"]), upload.single("image"), updateFood);
+foodRouter.post("/add", authMiddleware, roleAuth(["vendor"]), upload.single("image"), addFood);
+foodRouter.post("/remove/:id", authMiddleware, roleAuth(["vendor"]), removeFood);
+foodRouter.put("/update/:id", authMiddleware, roleAuth(["vendor"]), upload.single("image"), updateFood);
 foodRouter.get("/list", listfood);
 foodRouter.get("/:id", getFoodById);
 

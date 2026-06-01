@@ -31,5 +31,5 @@ orderRouter.put("/vendor/reject/:id", authMiddleware, roleAuth(["vendor"]), reje
 orderRouter.put("/vendor/status/:id", authMiddleware, roleAuth(["vendor"]), updateVendorOrderStatus);
 
 // Deprecated, kept for backward compatibility
-orderRouter.post("/updatestatus", updateStatus);
+orderRouter.post("/updatestatus", authMiddleware, roleAuth(["superadmin"]), updateStatus);
 export default orderRouter;

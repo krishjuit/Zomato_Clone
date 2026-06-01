@@ -16,14 +16,14 @@ restaurantRouter.get("/:id", getRestaurantById);
 restaurantRouter.post(
   "/",
   authMiddleware,
-  roleAuth(["vendor", "superadmin"]),
+  roleAuth(["vendor"]),
   createRestaurant
 );
 
 restaurantRouter.put(
   "/:id",
   authMiddleware,
-  roleAuth(["vendor", "superadmin"]),
+  roleAuth(["vendor"]),
   updateRestaurant
 );
 
