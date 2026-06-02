@@ -4,9 +4,11 @@ import { StoreContext } from "../../context/StoreContext";
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const { url, token } = useContext(StoreContext);
 
   const getMyOrders = async () => {
+    setLoading(true);
     try {
       const response = await axios.post(
         `${url}/api/order/userorders`,
@@ -26,6 +28,8 @@ const MyOrders = () => {
         "Get My Orders Error:",
         error.response?.data || error.message
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,7 +111,22 @@ const MyOrders = () => {
         </button>
       </div>
 
-      {orders.length === 0 ? (
+      {loading ? (
+        <div className="space-y-6">
+          {[1, 2].map((n) => (
+            <div key={n} className="animate-pulse bg-white border border-gray-150 rounded-3xl p-8 h-44 flex flex-col justify-between">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+                <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-5 bg-gray-200 rounded w-16"></div>
+              </div>
+              <div className="flex justify-between items-center pt-4">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-6 bg-gray-200 rounded w-24"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : orders.length === 0 ? (
         <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center shadow-sm">
           <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg

@@ -10,6 +10,7 @@ import restaurantRouter from "./routes/restaurantRoute.js";
 import couponRouter from "./routes/couponRoute.js";
 import reviewRouter from "./routes/reviewRoute.js";
 import analyticsRouter from "./routes/analyticsRoute.js";
+import notificationRouter from "./routes/notificationRoute.js";
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use("/api/restaurant", restaurantRouter);
 app.use("/api/coupon", couponRouter);
 app.use("/api/review", reviewRouter);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/notification", notificationRouter);
 
 // Test route
 app.get("/", (req, res) => {

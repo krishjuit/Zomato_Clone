@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar/Navbar";
 import Sidebar from "./components/Sidebar/Sidebar";
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate, NavLink } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Add from "./pages/Add/Add";
@@ -68,7 +68,7 @@ const App = () => {
         <Sidebar role={role} />
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8 overflow-y-auto">
 
           <Routes>
 
@@ -106,6 +106,26 @@ const App = () => {
 
           </Routes>
         </main>
+      </div>
+
+      {/* Mobile Bottom Navbar (only visible on mobile screens < md) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg flex justify-around py-3.5 z-50">
+        <NavLink to="/dashboard" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
+          <span className="text-lg">📊</span>
+          <span>Analytics</span>
+        </NavLink>
+        <NavLink to="/add" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
+          <span className="text-lg">➕</span>
+          <span>Add Item</span>
+        </NavLink>
+        <NavLink to="/orders" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
+          <span className="text-lg">📦</span>
+          <span>Orders</span>
+        </NavLink>
+        <NavLink to="/list" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
+          <span className="text-lg">📋</span>
+          <span>List</span>
+        </NavLink>
       </div>
     </div>
   );

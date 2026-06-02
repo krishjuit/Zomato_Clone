@@ -1,29 +1,13 @@
 import React from "react";
 import { StoreContext } from "../../context/StoreContext";
-import { Navigate } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+
 const Cart = () => {
   const [coupon, setCoupon] = React.useState("");
   const [discount, setDiscount] = React.useState(0);
-    // navigate=useNavigate();
-    const navigate=useNavigate();
-  const coupons = {
-    SAVE10: 10,
-    SAVE20: 20,
-    FOOD50: 50,
-  };
-
-  const applyCoupon = () => {
-    const code = coupon.trim().toUpperCase();
-
-    if (coupons[code]) {
-      setDiscount(coupons[code]);
-      alert(`Coupon applied! ${coupons[code]}% off`);
-    } else {
-      setDiscount(0);
-      alert("Invalid coupon code");
-    }
-  };
+  const navigate = useNavigate();
 
   const {
     cartItems,
@@ -32,11 +16,56 @@ const Cart = () => {
     addToCart,
     deleteFromCart,
     getTotalCartAmount,
+    token,
+    url,
   } = React.useContext(StoreContext);
+
+  const getCartRestaurantId = () => {
+    for (const itemId in cartItems) {
+      const itemInfo = food_list.find((food) => food._id === itemId);
+      if (itemInfo && itemInfo.restaurant) {
+        return itemInfo.restaurant._id || itemInfo.restaurant;
+      }
+    }
+    return null;
+  };
+
+  const applyCoupon = async () => {
+    const code = coupon.trim().toUpperCase();
+    if (!code) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+    const totalAmount = getTotalCartAmount();
+    if (totalAmount === 0) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
+    const restaurantId = getCartRestaurantId();
+
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.post(
+        `${url}/api/coupon/validate`,
+        { code, amount: totalAmount, restaurantId },
+        { headers }
+      );
+
+      if (response.data.success) {
+        setDiscount(response.data.discount);
+        toast.success(`Coupon applied! Saved $${response.data.discount}`);
+      }
+    } catch (error) {
+      console.error("Validate coupon error:", error);
+      setDiscount(0);
+      toast.error(error.response?.data?.message || "Invalid coupon code");
+    }
+  };
 
   const totalAmount = getTotalCartAmount();
 
-  const discountAmount = (totalAmount * discount) / 100;
+  const discountAmount = discount;
   const finalTotal = totalAmount - discountAmount + 5;
 
   const hasItems = Object.keys(cartItems).length > 0;

@@ -2,12 +2,15 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
+import { toast } from "react-toastify";
+
 const PlaceOrder = () => {
   const navigate = useNavigate();
   const { getTotalCartAmount,token,food_list,cartItems,url } = React.useContext(StoreContext);
 
   const [data,setData]=React.useState({
-    name:"",
+    firstName:"",
+    lastName:"",
     email:"",
     street:"",
     city:"",
@@ -67,7 +70,7 @@ const PlaceOrder = () => {
     if (result.success) {
       window.location.assign(result.sessionUrl);
     } else {
-      alert(result.message);
+      toast.error(result.message || "Failed to place order.");
       navigate("/cart");
     }
 
@@ -77,7 +80,7 @@ const PlaceOrder = () => {
       error.response?.data || error.message
     );
 
-    alert("Failed to place order");
+    toast.error("Failed to place order");
     navigate("/cart");
   }
 };
@@ -104,16 +107,16 @@ const PlaceOrder = () => {
             placeholder="First Name"
             className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ef4f5f]"
             required
-            value={data.name}
-            onChange={(e) => setData({...data, name: e.target.value})}
+            value={data.firstName}
+            onChange={(e) => setData({...data, firstName: e.target.value})}
           />
           <input
             type="text"
             placeholder="Last Name"
             className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ef4f5f]"
             required
-            value={data.name}
-            onChange={(e) => setData({...data, name: e.target.value})}
+            value={data.lastName}
+            onChange={(e) => setData({...data, lastName: e.target.value})}
           />
         </div>
 

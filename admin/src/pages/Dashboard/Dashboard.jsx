@@ -35,8 +35,37 @@ const Dashboard = ({ url, token, role }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-12 h-12 border-4 border-gray-200 border-t-[#ef4f5f] rounded-full animate-spin"></div>
+      <div className="space-y-8 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="bg-gray-200 rounded-2xl h-32 p-6 flex flex-col justify-between">
+              <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+              <div className="h-8 bg-gray-300 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-gray-200 rounded-3xl h-64 p-6 space-y-4">
+            <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+            <div className="space-y-2">
+              <div className="h-10 bg-gray-300 rounded"></div>
+              <div className="h-10 bg-gray-300 rounded"></div>
+            </div>
+          </div>
+          <div className="bg-gray-200 rounded-3xl h-64 p-6 space-y-4">
+            <div className="h-6 bg-gray-300 rounded w-1/2"></div>
+            <div className="space-y-3 pt-6">
+              <div className="h-4 bg-gray-300 rounded"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

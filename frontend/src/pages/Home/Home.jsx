@@ -8,6 +8,26 @@ import { StoreContext } from "../../context/StoreContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const RestaurantSkeleton = () => (
+  <div className="animate-pulse bg-white rounded-3xl border border-gray-100 p-5 space-y-4 h-full flex flex-col justify-between">
+    <div className="bg-gray-200 rounded-2xl h-48 w-full"></div>
+    <div className="space-y-2">
+      <div className="bg-gray-200 h-6 rounded w-3/4"></div>
+      <div className="bg-gray-200 h-4 rounded w-5/6"></div>
+    </div>
+    <div className="space-y-3 pt-3 border-t border-gray-100">
+      <div className="flex gap-2">
+        <div className="bg-gray-200 h-4 rounded w-12"></div>
+        <div className="bg-gray-200 h-4 rounded w-16"></div>
+      </div>
+      <div className="flex justify-between items-center">
+        <div className="bg-gray-200 h-4 rounded w-16"></div>
+        <div className="bg-gray-200 h-4 rounded w-12"></div>
+      </div>
+    </div>
+  </div>
+);
+
 const Home = () => {
   const [category, setCategory] = useState("All");
   const { url } = useContext(StoreContext);
@@ -40,6 +60,31 @@ const Home = () => {
 
   useEffect(() => {
     fetchRestaurantsPage(1);
+    document.title = "Zomato - Order Delicious Food Online";
+    
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', 'Browse premium restaurants, cuisines, and order fresh food directly to your doorstep with Zomato Clone.');
+
+    let ogTitle = document.querySelector('meta[property="og:title"]');
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta');
+      ogTitle.setAttribute('property', 'og:title');
+      document.head.appendChild(ogTitle);
+    }
+    ogTitle.setAttribute('content', 'Zomato - Order Delicious Food Online');
+
+    let ogDesc = document.querySelector('meta[property="og:description"]');
+    if (!ogDesc) {
+      ogDesc = document.createElement('meta');
+      ogDesc.setAttribute('property', 'og:description');
+      document.head.appendChild(ogDesc);
+    }
+    ogDesc.setAttribute('content', 'Browse premium restaurants, cuisines, and order fresh food directly to your doorstep.');
   }, []);
 
   // Stable mock rating generator based on restaurant name
@@ -84,8 +129,10 @@ const Home = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-gray-100 border-t-[#ef4f5f] rounded-full animate-spin"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <RestaurantSkeleton key={idx} />
+            ))}
           </div>
         ) : filteredRestaurants.length === 0 ? (
           <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-100 p-8">

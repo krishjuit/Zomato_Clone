@@ -116,6 +116,19 @@ const RestaurantDetails = () => {
     loadAllData();
   }, [id, token]);
 
+  useEffect(() => {
+    if (restaurant) {
+      document.title = `${restaurant.name} - Menu & Order Online | Zomato`;
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', `${restaurant.description || "Order fresh and delicious food online."} | Address: ${restaurant.address}`);
+    }
+  }, [restaurant]);
+
   // Handle Review submission
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -166,8 +179,24 @@ const RestaurantDetails = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[70vh]">
-        <div className="w-12 h-12 border-4 border-gray-200 border-t-[#ef4f5f] rounded-full animate-spin"></div>
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-pulse">
+        <div className="h-5 bg-gray-200 rounded w-48 mb-4"></div>
+        <div className="rounded-[32px] bg-gray-200 h-[320px] md:h-[400px] w-full"></div>
+        <div className="flex gap-4 border-b border-gray-100 pb-4">
+          <div className="h-10 bg-gray-200 rounded-xl w-32"></div>
+          <div className="h-10 bg-gray-200 rounded-xl w-40"></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="bg-white rounded-3xl border border-gray-100 p-5 space-y-4 h-64 flex flex-col justify-between">
+              <div className="bg-gray-200 rounded-2xl h-36 w-full"></div>
+              <div className="space-y-2">
+                <div className="bg-gray-200 h-5 rounded w-2/3"></div>
+                <div className="bg-gray-200 h-4 rounded w-5/6"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

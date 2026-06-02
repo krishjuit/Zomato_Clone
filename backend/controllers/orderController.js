@@ -3,6 +3,7 @@ import userModel from "../models/userModel.js";
 import foodModel from "../models/foodModel.js";
 import restaurantModel from "../models/restaurantModel.js";
 import orderStatusHistoryModel from "../models/orderStatusHistoryModel.js";
+import notificationModel from "../models/notificationModel.js";
 import stripe from "../config/stripe.js";
 
 // Place Order
@@ -146,6 +147,18 @@ export const verifyOrder = async (req, res) => {
         updatedBy: order.user,
       });
       await history.save();
+
+      // Send Vendor Notification
+      const restaurant = await restaurantModel.findById(order.restaurant);
+      if (restaurant) {
+        const notif = new notificationModel({
+          user: restaurant.owner,
+          type: "new_order_received",
+          message: `New order #${order._id.toString().slice(-6)} received for ${restaurant.name}.`,
+          order: order._id,
+        });
+        await notif.save();
+      }
     } else {
       order.status = "CANCELLED";
       order.payment = false;
@@ -311,6 +324,15 @@ export const acceptOrder = async (req, res) => {
     });
     await history.save();
 
+    // Send Customer Notification
+    const notif = new notificationModel({
+      user: order.user,
+      type: "order_accepted",
+      message: `Your order #${order._id.toString().slice(-6)} from ${restaurant.name} has been accepted and is being prepared.`,
+      order: order._id,
+    });
+    await notif.save();
+
     return res.status(200).json({ success: true, message: "Order accepted successfully", order });
   } catch (error) {
     console.error("Accept Order Error:", error);
@@ -348,6 +370,15 @@ export const rejectOrder = async (req, res) => {
       updatedBy: req.userId,
     });
     await history.save();
+
+    // Send Customer Notification
+    const notif = new notificationModel({
+      user: order.user,
+      type: "order_rejected",
+      message: `Your order #${order._id.toString().slice(-6)} from ${restaurant.name} has been rejected.`,
+      order: order._id,
+    });
+    await notif.save();
 
     return res.status(200).json({ success: true, message: "Order rejected successfully", order });
   } catch (error) {
@@ -402,6 +433,17 @@ export const updateVendorOrderStatus = async (req, res) => {
     });
     await history.save();
 
+    // Send Customer Notification if Delivered
+    if (status === "DELIVERED") {
+      const notif = new notificationModel({
+        user: order.user,
+        type: "order_delivered",
+        message: `Your order #${order._id.toString().slice(-6)} from ${restaurant.name} has been delivered!`,
+        order: order._id,
+      });
+      await notif.save();
+    }
+
     return res.status(200).json({ success: true, message: "Order status updated successfully", order });
   } catch (error) {
     console.error("Update Order Status Error:", error);
@@ -429,6 +471,33 @@ export const updateStatus = async (req, res) => {
       updatedBy: req.userId || order.user,
     });
     await history.save();
+
+    // Send Customer Notification
+    if (["ACCEPTED", "REJECTED", "DELIVERED"].includes(status)) {
+      const restaurant = await restaurantModel.findById(order.restaurant);
+      const restName = restaurant ? restaurant.name : "Restaurant";
+      
+      let notifType = "";
+      let notifMsg = "";
+      if (status === "ACCEPTED") {
+        notifType = "order_accepted";
+        notifMsg = `Your order #${order._id.toString().slice(-6)} from ${restName} has been accepted and is being prepared.`;
+      } else if (status === "REJECTED") {
+        notifType = "order_rejected";
+        notifMsg = `Your order #${order._id.toString().slice(-6)} from ${restName} has been rejected.`;
+      } else if (status === "DELIVERED") {
+        notifType = "order_delivered";
+        notifMsg = `Your order #${order._id.toString().slice(-6)} from ${restName} has been delivered!`;
+      }
+      
+      const notif = new notificationModel({
+        user: order.user,
+        type: notifType,
+        message: notifMsg,
+        order: order._id,
+      });
+      await notif.save();
+    }
 
     return res.status(200).json({
       success: true,

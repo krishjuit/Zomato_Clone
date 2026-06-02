@@ -4,6 +4,20 @@ import { StoreContext } from "../../context/StoreContext";
 import FoodItem from "../../components/FoodItem/FoodItem";
 import axios from "axios";
 
+const SearchSkeleton = () => (
+  <div className="animate-pulse bg-white rounded-3xl border border-gray-100 p-5 space-y-4 h-full flex flex-col justify-between">
+    <div className="bg-gray-200 rounded-2xl h-44 w-full"></div>
+    <div className="space-y-2">
+      <div className="bg-gray-200 h-5 rounded w-2/3"></div>
+      <div className="bg-gray-200 h-4 rounded w-4/5"></div>
+    </div>
+    <div className="space-y-3 pt-3 border-t border-gray-100 flex gap-2">
+      <div className="bg-gray-200 h-4 rounded w-10"></div>
+      <div className="bg-gray-200 h-4 rounded w-12"></div>
+    </div>
+  </div>
+);
+
 const Search = () => {
   const navigate = useNavigate();
   const { url } = useContext(StoreContext);
@@ -40,6 +54,18 @@ const Search = () => {
       setLoading(false);
     }
   };
+
+  // SEO mount hook
+  useEffect(() => {
+    document.title = "Search Cuisines & Restaurants - Zomato";
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', 'Find your favorite meals, cuisines, and local online dining spots on Zomato.');
+  }, []);
 
   // Debounced search trigger
   useEffect(() => {
@@ -205,10 +231,12 @@ const Search = () => {
         </div>
       )}
 
-      {/* Loading Spin */}
+      {/* Loading Skeletons */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-gray-100 border-t-[#ef4f5f] rounded-full animate-spin"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <SearchSkeleton key={idx} />
+          ))}
         </div>
       ) : !query ? (
         <div className="text-center py-20 bg-gray-50 rounded-3xl border border-gray-100 p-8 space-y-3">
