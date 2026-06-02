@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar/Navbar";
 import Sidebar from "./components/Sidebar/Sidebar";
 import { Route, Routes, Navigate } from "react-router-dom";
 
+import Dashboard from "./pages/Dashboard/Dashboard";
 import Add from "./pages/Add/Add";
 import Orders from "./pages/Orders/Orders";
 import List from "./pages/List/List";
@@ -74,7 +75,12 @@ const App = () => {
             {/* Default Route */}
             <Route
               path="/"
-              element={<Navigate to="/list" />}
+              element={<Navigate to="/dashboard" />}
+            />
+
+            <Route
+              path="/dashboard"
+              element={<Dashboard url={url} token={token} role={role} />}
             />
 
             {/* Pages */}

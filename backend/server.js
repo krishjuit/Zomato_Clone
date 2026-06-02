@@ -7,6 +7,9 @@ import userRouter from "./routes/userRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import restaurantRouter from "./routes/restaurantRoute.js";
+import couponRouter from "./routes/couponRoute.js";
+import reviewRouter from "./routes/reviewRoute.js";
+import analyticsRouter from "./routes/analyticsRoute.js";
 
 dotenv.config();
 
@@ -27,6 +30,9 @@ app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/restaurant", restaurantRouter);
+app.use("/api/coupon", couponRouter);
+app.use("/api/review", reviewRouter);
+app.use("/api/analytics", analyticsRouter);
 
 // Test route
 app.get("/", (req, res) => {
