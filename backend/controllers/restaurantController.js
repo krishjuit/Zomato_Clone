@@ -94,10 +94,13 @@ export const listRestaurants = async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
+    const { owner, all } = req.query;
 
-    // If page and limit are not specified, return all active restaurants (backward compatibility)
+    const query = owner ? { owner } : (all === "true" ? {} : { isActive: true });
+
+    // If page and limit are not specified, return all matching restaurants (backward compatibility)
     if (!page || !limit) {
-      const restaurants = await restaurantModel.find({ isActive: true }).populate("owner", "name email").sort({ name: 1 });
+      const restaurants = await restaurantModel.find(query).populate("owner", "name email").sort({ name: 1 });
       return res.status(200).json({
         success: true,
         restaurants,
@@ -105,9 +108,9 @@ export const listRestaurants = async (req, res) => {
     }
 
     const skip = (page - 1) * limit;
-    const total = await restaurantModel.countDocuments({ isActive: true });
+    const total = await restaurantModel.countDocuments(query);
     const restaurants = await restaurantModel
-      .find({ isActive: true })
+      .find(query)
       .populate("owner", "name email")
       .sort({ name: 1 })
       .skip(skip)

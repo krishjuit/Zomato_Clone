@@ -28,7 +28,7 @@ restaurantRouter.post(
 restaurantRouter.put(
   "/:id",
   authMiddleware,
-  roleAuth(["vendor"]),
+  roleAuth(["vendor", "superadmin"]),
   validateObjectId,
   updateRestaurant
 );

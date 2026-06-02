@@ -177,6 +177,48 @@ const RestaurantDetails = () => {
     return ord ? ord.items : [];
   }, [selectedOrderId, eligibleOrders]);
 
+  const decodeToken = (t) => {
+    try {
+      const base64Url = t.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        window.atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const currentUser = token ? decodeToken(token) : null;
+  const currentUserId = currentUser?.userId || "";
+  const currentUserRole = currentUser?.role || "";
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+
+    try {
+      const response = await axios.delete(`${url}/api/review/${reviewId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.data.success) {
+        toast.success("Review deleted successfully!");
+        // Reload reviews & stats
+        await fetchReviews();
+        await fetchRestaurantDetails();
+        await checkReviewEligibility();
+      } else {
+        toast.error(response.data.message || "Failed to delete review.");
+      }
+    } catch (error) {
+      console.error("Delete Review Error:", error);
+      toast.error(error.response?.data?.message || "Failed to delete review.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-pulse">
@@ -460,9 +502,21 @@ const RestaurantDetails = () => {
                         </span>
                       </div>
                       
-                      <span className="bg-amber-50 border border-amber-100 text-amber-700 font-black px-2.5 py-0.5 rounded-lg text-xs flex items-center gap-0.5 shadow-sm">
-                        ★ {rev.rating}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-amber-50 border border-amber-100 text-amber-700 font-black px-2.5 py-0.5 rounded-lg text-xs flex items-center gap-0.5 shadow-sm">
+                          ★ {rev.rating}
+                        </span>
+
+                        {(rev.user?._id === currentUserId || currentUserRole === "superadmin") && (
+                          <button
+                            onClick={() => handleDeleteReview(rev._id)}
+                            className="p-1 hover:bg-rose-50 text-rose-500 rounded-lg transition active:scale-95 cursor-pointer text-xs"
+                            title="Delete Review"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <p className="text-gray-600 text-sm leading-relaxed">

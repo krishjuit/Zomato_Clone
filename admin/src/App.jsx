@@ -10,6 +10,7 @@ import List from "./pages/List/List";
 import EditFood from "./pages/Edit/EditFood";
 import Login from "./pages/Login/Login";
 import Coupons from "./pages/Coupons/Coupons";
+import Settings from "./pages/Settings/Settings";
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -110,6 +111,11 @@ const App = () => {
               element={<Coupons url={url} token={token} role={role} />}
             />
 
+            <Route
+              path="/settings"
+              element={<Settings url={url} token={token} role={role} />}
+            />
+
           </Routes>
         </main>
       </div>
@@ -135,6 +141,10 @@ const App = () => {
         <NavLink to="/coupons" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
           <span className="text-lg">🏷️</span>
           <span>Coupons</span>
+        </NavLink>
+        <NavLink to="/settings" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
+          <span className="text-lg">⚙️</span>
+          <span>Settings</span>
         </NavLink>
       </div>
     </div>
