@@ -9,6 +9,7 @@ import Orders from "./pages/Orders/Orders";
 import List from "./pages/List/List";
 import EditFood from "./pages/Edit/EditFood";
 import Login from "./pages/Login/Login";
+import Coupons from "./pages/Coupons/Coupons";
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -104,6 +105,11 @@ const App = () => {
               element={<EditFood url={url} token={token} role={role} />}
             />
 
+            <Route
+              path="/coupons"
+              element={<Coupons url={url} token={token} role={role} />}
+            />
+
           </Routes>
         </main>
       </div>
@@ -125,6 +131,10 @@ const App = () => {
         <NavLink to="/list" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
           <span className="text-lg">📋</span>
           <span>List</span>
+        </NavLink>
+        <NavLink to="/coupons" className={({ isActive }) => `flex flex-col items-center gap-0.5 text-[10px] font-bold transition-colors ${isActive ? "text-[#ef4f5f]" : "text-gray-500 hover:text-gray-800"}`}>
+          <span className="text-lg">🏷️</span>
+          <span>Coupons</span>
         </NavLink>
       </div>
     </div>

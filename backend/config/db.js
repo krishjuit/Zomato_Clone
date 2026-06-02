@@ -56,6 +56,24 @@ const connectDB = async () => {
     console.log("Default Kitchen");
     console.log("");
 
+    // Ensure default superadmin exists on startup
+    const superadminEmail = process.env.DEFAULT_SUPERADMIN_EMAIL || "superadmin@zomato.com";
+    const superadminPassword = process.env.DEFAULT_SUPERADMIN_PASSWORD || "admin123";
+    let defaultSuperadmin = await userModel.findOne({ email: superadminEmail });
+    if (!defaultSuperadmin) {
+      console.log("Creating default superadmin account...");
+      const hashedSuperPassword = await bcrypt.hash(superadminPassword, 10);
+      defaultSuperadmin = await userModel.create({
+        name: "Super Admin",
+        email: superadminEmail,
+        password: hashedSuperPassword,
+        role: "superadmin",
+      });
+    }
+    console.log("Default superadmin ready:");
+    console.log(`Email: ${superadminEmail}`);
+    console.log("");
+
     // Auto-migration for legacy foods
     const orphanedFoodsCount = await foodModel.countDocuments({ restaurant: { $exists: false } });
     if (orphanedFoodsCount > 0) {

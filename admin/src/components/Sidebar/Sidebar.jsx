@@ -87,6 +87,26 @@ const Sidebar = ({ role }) => {
           </span>
         </NavLink>
 
+        {/* Coupons */}
+        <NavLink to="/coupons" className={linkClass}>
+          <svg
+            className="w-6.5 h-6.5 text-current opacity-80"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <span className="font-medium">
+            Coupons
+          </span>
+        </NavLink>
+
       </div>
 
       {/* Bottom */}
