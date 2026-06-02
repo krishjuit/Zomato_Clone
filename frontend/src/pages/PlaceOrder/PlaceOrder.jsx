@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
-  const { getTotalCartAmount,token,food_list,cartItems,url } = React.useContext(StoreContext);
+  const { getTotalCartAmount,token,food_list,cartItems,url,appliedCouponCode,couponDiscount } = React.useContext(StoreContext);
 
   const [data,setData]=React.useState({
     firstName:"",
@@ -52,7 +52,8 @@ const PlaceOrder = () => {
     const orderData = {
       items: orderItems,
       address: data,
-      totalAmount: getTotalCartAmount() + 5,
+      totalAmount: getTotalCartAmount() + 5 - couponDiscount,
+      couponCode: appliedCouponCode || null,
     };
 
     const response = await axios.post(
@@ -87,7 +88,7 @@ const PlaceOrder = () => {
 
   const totalAmount = getTotalCartAmount();
   const deliveryFee = 5;
-  const finalTotal = totalAmount + deliveryFee;
+  const finalTotal = totalAmount + deliveryFee - couponDiscount;
 
   return (
     <form className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-2 gap-10"
@@ -198,6 +199,13 @@ const PlaceOrder = () => {
             <span>Subtotal</span>
             <span>${totalAmount}</span>
           </div>
+
+          {couponDiscount > 0 && (
+            <div className="flex justify-between text-green-600 font-semibold">
+              <span>Coupon Discount ({appliedCouponCode})</span>
+              <span>-${couponDiscount}</span>
+            </div>
+          )}
 
           <div className="flex justify-between">
             <span>Delivery Fee</span>

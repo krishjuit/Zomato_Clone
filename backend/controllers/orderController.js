@@ -4,13 +4,14 @@ import foodModel from "../models/foodModel.js";
 import restaurantModel from "../models/restaurantModel.js";
 import orderStatusHistoryModel from "../models/orderStatusHistoryModel.js";
 import notificationModel from "../models/notificationModel.js";
+import couponModel from "../models/couponModel.js";
 import stripe from "../config/stripe.js";
 
 // Place Order
 export const placeOrder = async (req, res) => {
   try {
     const frontend_url = process.env.FRONTEND_URL;
-    const { totalAmount, address } = req.body;
+    const { totalAmount, address, couponCode } = req.body;
 
     const user = await userModel.findById(req.userId);
     if (!user) {
@@ -56,12 +57,57 @@ export const placeOrder = async (req, res) => {
       });
     }
 
+    // Recalculate subtotal on backend
+    let subtotal = 0;
+    for (const itemId in cartData) {
+      const food = await foodModel.findById(itemId);
+      if (food) {
+        subtotal += food.price * cartData[itemId];
+      }
+    }
+
+    // Validate and calculate discount
+    let discountAmount = 0;
+    let validCouponCode = null;
+
+    if (couponCode) {
+      const uppercaseCode = couponCode.trim().toUpperCase();
+      const couponObj = await couponModel.findOne({ code: uppercaseCode, isActive: true });
+      if (couponObj) {
+        const today = new Date();
+        if (new Date(couponObj.expiryDate) > today && couponObj.usedCount < couponObj.usageLimit) {
+          // Check restaurant scope
+          if (couponObj.isGlobal || couponObj.restaurant.toString() === restaurantId.toString()) {
+            if (subtotal >= couponObj.minimumOrderAmount) {
+              validCouponCode = couponObj.code;
+              if (couponObj.discountType === "percentage") {
+                discountAmount = subtotal * (couponObj.discountValue / 100);
+                if (couponObj.maximumDiscount > 0 && discountAmount > couponObj.maximumDiscount) {
+                  discountAmount = couponObj.maximumDiscount;
+                }
+              } else if (couponObj.discountType === "flat") {
+                discountAmount = couponObj.discountValue;
+              }
+              if (discountAmount > subtotal) {
+                discountAmount = subtotal;
+              }
+              discountAmount = Math.round(discountAmount * 100) / 100;
+            }
+          }
+        }
+      }
+    }
+
+    const calculatedTotal = subtotal + 5 - discountAmount;
+
     const newOrder = new orderModel({
       user: req.userId,
       restaurant: restaurantId,
       items: orderItems,
-      amount: totalAmount,
+      amount: calculatedTotal,
       address,
+      couponCode: validCouponCode,
+      discount: discountAmount,
     });
 
     await newOrder.save();
@@ -97,13 +143,30 @@ export const placeOrder = async (req, res) => {
       quantity: 1,
     });
 
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSessionPayload = {
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
       success_url: `${frontend_url}/verify?success=true&orderId=${newOrder._id}`,
       cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
-    });
+    };
+
+    // If discount is applied, create a Stripe coupon and link it
+    if (discountAmount > 0) {
+      try {
+        const stripeCoupon = await stripe.coupons.create({
+          amount_off: Math.round(discountAmount * 100),
+          currency: "usd",
+          duration: "once",
+          name: `Promo Discount (${validCouponCode})`,
+        });
+        checkoutSessionPayload.discounts = [{ coupon: stripeCoupon.id }];
+      } catch (stripeErr) {
+        console.error("Stripe Coupon Creation Error:", stripeErr);
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create(checkoutSessionPayload);
 
     return res.status(200).json({
       success: true,
@@ -139,6 +202,14 @@ export const verifyOrder = async (req, res) => {
 
       // Clear customer's cart
       await userModel.findByIdAndUpdate(order.user, { cartData: {} });
+
+      // Update coupon usage if couponCode was used
+      if (order.couponCode) {
+        await couponModel.findOneAndUpdate(
+          { code: order.couponCode },
+          { $inc: { usedCount: 1 } }
+        );
+      }
 
       // Log status history
       const history = new orderStatusHistoryModel({

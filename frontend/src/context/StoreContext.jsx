@@ -10,6 +10,8 @@ const StoreProvider = ({ children }) => {
   const [restaurant_list, setRestaurantList] = useState([]);
   const [cartItems, setCartItems] = useState({});
   const [token, setToken] = useState("");
+  const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   const fetchRestaurants = async () => {
     try {
@@ -201,9 +203,13 @@ const StoreProvider = ({ children }) => {
     cartItems,
     token,
     url,
+    appliedCouponCode,
+    couponDiscount,
 
     setToken,
     setCartItems,
+    setAppliedCouponCode,
+    setCouponDiscount,
 
     addToCart,
     removeFromCart,
