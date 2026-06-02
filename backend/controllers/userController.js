@@ -34,7 +34,13 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    if (role && !["customer", "vendor", "superadmin"].includes(role)) {
+    if (role === "superadmin") {
+      return res.status(400).json({
+        message: "Registration of Superadmin role is not permitted",
+      });
+    }
+
+    if (role && !["customer", "vendor"].includes(role)) {
       return res.status(400).json({
         message: "Invalid user role specified",
       });

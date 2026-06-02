@@ -56,23 +56,26 @@ const connectDB = async () => {
     console.log("Default Kitchen");
     console.log("");
 
-    // Ensure default superadmin exists on startup
-    const superadminEmail = process.env.DEFAULT_SUPERADMIN_EMAIL || "superadmin@zomato.com";
-    const superadminPassword = process.env.DEFAULT_SUPERADMIN_PASSWORD || "admin123";
-    let defaultSuperadmin = await userModel.findOne({ email: superadminEmail });
-    if (!defaultSuperadmin) {
-      console.log("Creating default superadmin account...");
+    // Ensure at least one superadmin exists on startup (bootstrap check)
+    const superadminExists = await userModel.findOne({ role: "superadmin" });
+    if (!superadminExists) {
+      console.log("No superadmin account found. Auto-creating first superadmin...");
+      const superadminEmail = process.env.SUPERADMIN_EMAIL || process.env.DEFAULT_SUPERADMIN_EMAIL || "superadmin@zomato.com";
+      const superadminPassword = process.env.SUPERADMIN_PASSWORD || process.env.DEFAULT_SUPERADMIN_PASSWORD || "admin123";
+      
       const hashedSuperPassword = await bcrypt.hash(superadminPassword, 10);
-      defaultSuperadmin = await userModel.create({
+      await userModel.create({
         name: "Super Admin",
         email: superadminEmail,
         password: hashedSuperPassword,
         role: "superadmin",
       });
+      console.log("First superadmin created successfully:");
+      console.log(`Email: ${superadminEmail}`);
+      console.log("");
+    } else {
+      console.log("Superadmin account(s) present in database. Seeding skipped.");
     }
-    console.log("Default superadmin ready:");
-    console.log(`Email: ${superadminEmail}`);
-    console.log("");
 
     // Auto-migration for legacy foods
     const orphanedFoodsCount = await foodModel.countDocuments({ restaurant: { $exists: false } });
