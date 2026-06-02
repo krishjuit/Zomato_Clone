@@ -7,6 +7,8 @@ import Cart from './pages/Cart/Cart'
 import PlaceOrder from './pages/PlaceOrder/PlaceOrder'
 import Verify from './pages/Verify/verify'
 import MyOrders from './pages/MyOrders/MyOrders'
+import RestaurantDetails from './pages/RestaurantDetails/RestaurantDetails'
+import Search from './pages/Search/Search'
 
 
 
@@ -36,6 +38,8 @@ const App = () => {
           <Route path="/order" element={<PlaceOrder />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/myorders" element={<MyOrders/>}></Route>
+          <Route path="/restaurant/:id" element={<RestaurantDetails />} />
+          <Route path="/search" element={<Search />} />
         </Routes>
 
       </div>

@@ -1,5 +1,6 @@
 import restaurantModel from "../models/restaurantModel.js";
 import userModel from "../models/userModel.js";
+import foodModel from "../models/foodModel.js";
 
 // Create Restaurant
 export const createRestaurant = async (req, res) => {
@@ -88,14 +89,38 @@ export const getRestaurantById = async (req, res) => {
   }
 };
 
-// Get All Restaurants
+// Get All Restaurants (supporting pagination)
 export const listRestaurants = async (req, res) => {
   try {
-    const restaurants = await restaurantModel.find({ isActive: true }).populate("owner", "name email");
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+
+    // If page and limit are not specified, return all active restaurants (backward compatibility)
+    if (!page || !limit) {
+      const restaurants = await restaurantModel.find({ isActive: true }).populate("owner", "name email");
+      return res.status(200).json({
+        success: true,
+        restaurants,
+      });
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await restaurantModel.countDocuments({ isActive: true });
+    const restaurants = await restaurantModel
+      .find({ isActive: true })
+      .populate("owner", "name email")
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       success: true,
       restaurants,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("List Restaurants Error:", error);
@@ -146,6 +171,103 @@ export const updateRestaurant = async (req, res) => {
     });
   } catch (error) {
     console.error("Update Restaurant Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get Restaurant Menu (supporting pagination)
+export const getRestaurantMenu = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    const restaurant = await restaurantModel.findById(id);
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found",
+      });
+    }
+
+    const query = { restaurant: id, isAvailable: true };
+    const total = await foodModel.countDocuments(query);
+    const menu = await foodModel
+      .find(query)
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      menu,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Get Restaurant Menu Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Search Restaurants & Foods (supporting name, cuisine, category)
+export const searchAll = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(200).json({
+        success: true,
+        restaurants: [],
+        foods: [],
+      });
+    }
+
+    const regex = new RegExp(q, "i");
+
+    // Search Restaurants: matches name OR cuisine array
+    const restaurants = await restaurantModel.find({
+      isActive: true,
+      $or: [
+        { name: regex },
+        { cuisine: regex }
+      ]
+    }).populate("owner", "name email");
+
+    // Find restaurant IDs whose names match the query (to show their dishes too)
+    const matchingRestaurants = await restaurantModel.find({
+      isActive: true,
+      name: regex
+    }).select("_id");
+    const restaurantIds = matchingRestaurants.map(r => r._id);
+
+    // Search Foods: matches name OR category OR description OR restaurant ID
+    const foods = await foodModel.find({
+      isAvailable: true,
+      $or: [
+        { name: regex },
+        { category: regex },
+        { description: regex },
+        { restaurant: { $in: restaurantIds } }
+      ]
+    }).populate("restaurant", "name address image");
+
+    return res.status(200).json({
+      success: true,
+      restaurants,
+      foods,
+    });
+  } catch (error) {
+    console.error("Search Error:", error);
     return res.status(500).json({
       success: false,
       message: error.message,

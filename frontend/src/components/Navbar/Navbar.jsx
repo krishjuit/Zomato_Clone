@@ -65,13 +65,13 @@ const Navbar = ({setShowLogin}) => {
           <div className="hidden md:flex items-center gap-4">
             
             {/* Search */}
-            <button className="w-11 h-11 rounded-full flex items-center justify-center bg-gray-100 hover:bg-[#fff1f2] transition-all duration-300 group">
+            <Link to="/search" className="w-11 h-11 rounded-full flex items-center justify-center bg-gray-100 hover:bg-[#fff1f2] transition-all duration-300 group">
               <img
                 src={assets.search_icon}
                 alt="Search"
                 className="w-5 h-5 opacity-70 group-hover:opacity-100"
               />
-            </button>
+            </Link>
 
             {/* Cart */}
             <div className="relative">
@@ -222,17 +222,19 @@ const Navbar = ({setShowLogin}) => {
         <div className="bg-white px-5 py-5 space-y-4 shadow-inner">
           
           {/* Search Box */}
-          <div className="flex items-center gap-3 bg-gray-100 rounded-xl px-4 py-3">
+          <div 
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              navigate("/search");
+            }}
+            className="flex items-center gap-3 bg-gray-100 rounded-xl px-4 py-3 cursor-pointer"
+          >
             <img
               src={assets.search_icon}
               alt="Search"
               className="w-4 h-4 opacity-60"
             />
-            <input
-              type="text"
-              placeholder="Search your favourite food..."
-              className="bg-transparent w-full text-sm focus:outline-none"
-            />
+            <span className="text-gray-400 text-sm">Search your favourite food...</span>
           </div>
 
           {/* Menu Items */}

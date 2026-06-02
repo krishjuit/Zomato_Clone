@@ -7,8 +7,20 @@ const StoreProvider = ({ children }) => {
   const url = import.meta.env.VITE_BACKEND_URL;
 
   const [food_list, setFoodList] = useState([]);
+  const [restaurant_list, setRestaurantList] = useState([]);
   const [cartItems, setCartItems] = useState({});
   const [token, setToken] = useState("");
+
+  const fetchRestaurants = async () => {
+    try {
+      const response = await axios.get(`${url}/api/restaurant/list`);
+      if (response.data.success) {
+        setRestaurantList(response.data.restaurants);
+      }
+    } catch (error) {
+      console.error("Fetch Restaurants Error:", error);
+    }
+  };
 
   // =========================
   // FETCH FOOD ITEMS
@@ -169,6 +181,7 @@ const StoreProvider = ({ children }) => {
   useEffect(() => {
     const loadData = async () => {
       await fetchFoodItems();
+      await fetchRestaurants();
 
       const storedToken =
         localStorage.getItem("token");
@@ -184,6 +197,7 @@ const StoreProvider = ({ children }) => {
 
   const contextValue = {
     food_list,
+    restaurant_list,
     cartItems,
     token,
     url,
@@ -197,6 +211,7 @@ const StoreProvider = ({ children }) => {
 
     getTotalCartAmount,
     loadCartData,
+    fetchRestaurants,
   };
 
   return (
