@@ -9,13 +9,14 @@ import {
 } from "../controllers/restaurantController.js";
 import authMiddleware from "../middleware/auth.js";
 import roleAuth from "../middleware/roleAuth.js";
+import validateObjectId from "../middleware/validateObjectId.js";
 
 const restaurantRouter = express.Router();
 
 restaurantRouter.get("/list", listRestaurants);
 restaurantRouter.get("/search", searchAll);
-restaurantRouter.get("/:id", getRestaurantById);
-restaurantRouter.get("/:id/menu", getRestaurantMenu);
+restaurantRouter.get("/:id", validateObjectId, getRestaurantById);
+restaurantRouter.get("/:id/menu", validateObjectId, getRestaurantMenu);
 
 restaurantRouter.post(
   "/",
@@ -28,6 +29,7 @@ restaurantRouter.put(
   "/:id",
   authMiddleware,
   roleAuth(["vendor"]),
+  validateObjectId,
   updateRestaurant
 );
 

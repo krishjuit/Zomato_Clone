@@ -13,6 +13,7 @@ import {
 } from "../controllers/orderController.js";
 import authMiddleware from "../middleware/auth.js";
 import roleAuth from "../middleware/roleAuth.js";
+import validateObjectId from "../middleware/validateObjectId.js";
 
 const orderRouter = express.Router();
 
@@ -26,9 +27,9 @@ orderRouter.get("/allorders", authMiddleware, roleAuth(["superadmin"]), allOrder
 // Vendor only
 orderRouter.get("/vendor/pending", authMiddleware, roleAuth(["vendor"]), getVendorPendingOrders);
 orderRouter.get("/vendor/history", authMiddleware, roleAuth(["vendor"]), getVendorOrderHistory);
-orderRouter.put("/vendor/accept/:id", authMiddleware, roleAuth(["vendor"]), acceptOrder);
-orderRouter.put("/vendor/reject/:id", authMiddleware, roleAuth(["vendor"]), rejectOrder);
-orderRouter.put("/vendor/status/:id", authMiddleware, roleAuth(["vendor"]), updateVendorOrderStatus);
+orderRouter.put("/vendor/accept/:id", authMiddleware, roleAuth(["vendor"]), validateObjectId, acceptOrder);
+orderRouter.put("/vendor/reject/:id", authMiddleware, roleAuth(["vendor"]), validateObjectId, rejectOrder);
+orderRouter.put("/vendor/status/:id", authMiddleware, roleAuth(["vendor"]), validateObjectId, updateVendorOrderStatus);
 
 // Deprecated, kept for backward compatibility
 orderRouter.post("/updatestatus", authMiddleware, roleAuth(["superadmin"]), updateStatus);

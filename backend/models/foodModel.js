@@ -15,7 +15,7 @@ const foodSchema=new mongoose.Schema({
         type: Boolean,
         default: true,
     }
-})
+}, { timestamps: true })
 
 const foodModel=mongoose.models.food || mongoose.model("food",foodSchema);
 
