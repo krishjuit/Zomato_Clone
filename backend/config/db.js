@@ -17,13 +17,16 @@ const connectDB = async () => {
 
     const setupDefaultRestaurant = async () => {
       if (defaultRestaurant) return defaultRestaurant;
-      defaultVendor = await userModel.findOne({ email: "default_vendor@zomato.com" });
+      const email = process.env.DEFAULT_VENDOR_EMAIL || "default_vendor@zomato.com";
+      const password = process.env.DEFAULT_VENDOR_PASSWORD || "vendor123";
+
+      defaultVendor = await userModel.findOne({ email });
       if (!defaultVendor) {
         console.log("Creating default vendor account...");
-        const hashedPassword = await bcrypt.hash("vendor123", 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
         defaultVendor = await userModel.create({
           name: "Default Vendor",
-          email: "default_vendor@zomato.com",
+          email,
           password: hashedPassword,
           role: "vendor",
         });
@@ -43,6 +46,15 @@ const connectDB = async () => {
       }
       return defaultRestaurant;
     };
+
+    // Ensure default vendor & restaurant exist on startup (bootstrap)
+    await setupDefaultRestaurant();
+    console.log("Default vendor ready:");
+    console.log(`Email: ${process.env.DEFAULT_VENDOR_EMAIL || "default_vendor@zomato.com"}`);
+    console.log("");
+    console.log("Default restaurant ready:");
+    console.log("Default Kitchen");
+    console.log("");
 
     // Auto-migration for legacy foods
     const orphanedFoodsCount = await foodModel.countDocuments({ restaurant: { $exists: false } });
