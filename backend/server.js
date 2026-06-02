@@ -1,6 +1,35 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+// Enforce environment validation on startup
+const requiredEnv = [
+  "MONGO_URL",
+  "JWT_SECRET",
+  "CLOUDINARY_NAME",
+  "CLOUDINARY_KEY",
+  "CLOUDINARY_SECRET",
+  "STRIPE_SECRET_KEY",
+  "SUPERADMIN_EMAIL",
+  "SUPERADMIN_PASSWORD",
+  "DEFAULT_VENDOR_EMAIL",
+  "DEFAULT_VENDOR_PASSWORD",
+  "FRONTEND_URL",
+  "ADMIN_URL",
+];
+
+for (const key of requiredEnv) {
+  if (!process.env[key] || !process.env[key].trim()) {
+    console.error(`CRITICAL STARTUP ERROR: Required environment variable "${key}" is missing or empty.`);
+    process.exit(1);
+  }
+}
+
+// Enforce JWT strength validation (Recommend production secret length > 32 characters)
+const jwtSecret = process.env.JWT_SECRET;
+if (jwtSecret.length < 32) {
+  console.warn(`WARNING: JWT_SECRET is too weak (${jwtSecret.length} characters). It is highly recommended to use a cryptographically secure key of at least 32 characters in production.`);
+}
+
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
@@ -19,7 +48,24 @@ const app = express(); // ✅ MUST be first
 const port = process.env.PORT || 4000;
 
 // Middlewares
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL.trim(),
+  process.env.ADMIN_URL.trim()
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, server-to-server, or local dev tools)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
 // DB connection

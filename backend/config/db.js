@@ -17,8 +17,8 @@ const connectDB = async () => {
 
     const setupDefaultRestaurant = async () => {
       if (defaultRestaurant) return defaultRestaurant;
-      const email = process.env.DEFAULT_VENDOR_EMAIL || "default_vendor@zomato.com";
-      const password = process.env.DEFAULT_VENDOR_PASSWORD || "vendor123";
+      const email = process.env.DEFAULT_VENDOR_EMAIL;
+      const password = process.env.DEFAULT_VENDOR_PASSWORD;
 
       defaultVendor = await userModel.findOne({ email });
       if (!defaultVendor) {
@@ -50,7 +50,7 @@ const connectDB = async () => {
     // Ensure default vendor & restaurant exist on startup (bootstrap)
     await setupDefaultRestaurant();
     console.log("Default vendor ready:");
-    console.log(`Email: ${process.env.DEFAULT_VENDOR_EMAIL || "default_vendor@zomato.com"}`);
+    console.log(`Email: ${process.env.DEFAULT_VENDOR_EMAIL}`);
     console.log("");
     console.log("Default restaurant ready:");
     console.log("Default Kitchen");
@@ -60,8 +60,8 @@ const connectDB = async () => {
     const superadminExists = await userModel.findOne({ role: "superadmin" });
     if (!superadminExists) {
       console.log("No superadmin account found. Auto-creating first superadmin...");
-      const superadminEmail = process.env.SUPERADMIN_EMAIL || process.env.DEFAULT_SUPERADMIN_EMAIL || "superadmin@zomato.com";
-      const superadminPassword = process.env.SUPERADMIN_PASSWORD || process.env.DEFAULT_SUPERADMIN_PASSWORD || "admin123";
+      const superadminEmail = process.env.SUPERADMIN_EMAIL;
+      const superadminPassword = process.env.SUPERADMIN_PASSWORD;
       
       const hashedSuperPassword = await bcrypt.hash(superadminPassword, 10);
       await userModel.create({
