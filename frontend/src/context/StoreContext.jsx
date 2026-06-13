@@ -8,8 +8,21 @@ const StoreProvider = ({ children }) => {
 
   const [food_list, setFoodList] = useState([]);
   const [restaurant_list, setRestaurantList] = useState([]);
-  const [cartItems, setCartItems] = useState({});
-  const [token, setToken] = useState("");
+  
+  const [cartItems, setCartItems] = useState(() => {
+    const localCart = localStorage.getItem("cartItems");
+    try {
+      return localCart ? JSON.parse(localCart) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem("token") || "";
+  });
+
+  const [showLogin, setShowLogin] = useState(false);
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
 
@@ -78,85 +91,108 @@ const StoreProvider = ({ children }) => {
   // ADD TO CART
   // =========================
   const addToCart = async (itemId) => {
-  try {
-    if (!token) return;
+    setCartItems((prev) => {
+      const updated = { ...prev };
+      updated[itemId] = (updated[itemId] || 0) + 1;
+      return updated;
+    });
 
-    const response = await axios.post(
-      `${url}/api/cart/add`,
-      { itemId },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    if (token) {
+      try {
+        const response = await axios.post(
+          `${url}/api/cart/add`,
+          { itemId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setCartItems(response.data.cartData);
+        }
+      } catch (error) {
+        console.error(
+          "Add Cart Error:",
+          error.response?.data || error.message
+        );
       }
-    );
-
-    if (response.data.success) {
-      setCartItems(response.data.cartData);
     }
-  } catch (error) {
-    console.error(
-      "Add Cart Error:",
-      error.response?.data || error.message
-    );
-  }
-};
+  };
 
   // =========================
   // REMOVE ONE QUANTITY
   // =========================
   const removeFromCart = async (itemId) => {
-  try {
-    if (!token) return;
-
-    const response = await axios.post(
-      `${url}/api/cart/remove`,
-      { itemId },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    setCartItems((prev) => {
+      const updated = { ...prev };
+      if (updated[itemId]) {
+        updated[itemId] -= 1;
+        if (updated[itemId] <= 0) {
+          delete updated[itemId];
+        }
       }
-    );
+      return updated;
+    });
 
-    if (response.data.success) {
-      setCartItems(response.data.cartData);
+    if (token) {
+      try {
+        const response = await axios.post(
+          `${url}/api/cart/remove`,
+          { itemId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setCartItems(response.data.cartData);
+        }
+      } catch (error) {
+        console.error(
+          "Remove Cart Error:",
+          error.response?.data || error.message
+        );
+      }
     }
-  } catch (error) {
-    console.error(
-      "Remove Cart Error:",
-      error.response?.data || error.message
-    );
-  }
-};
+  };
 
   // =========================
   // DELETE ITEM COMPLETELY
   // =========================
   const deleteFromCart = async (itemId) => {
-  try {
-    if (!token) return;
+    setCartItems((prev) => {
+      const updated = { ...prev };
+      delete updated[itemId];
+      return updated;
+    });
 
-    const response = await axios.post(
-      `${url}/api/cart/delete`,
-      { itemId },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    if (token) {
+      try {
+        const response = await axios.post(
+          `${url}/api/cart/delete`,
+          { itemId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setCartItems(response.data.cartData);
+        }
+      } catch (error) {
+        console.error(
+          "Delete Cart Error:",
+          error.response?.data || error.message
+        );
       }
-    );
-
-    if (response.data.success) {
-      setCartItems(response.data.cartData);
     }
-  } catch (error) {
-    console.error(
-      "Delete Cart Error:",
-      error.response?.data || error.message
-    );
-  }
-};
+  };
 
   // =========================
   // TOTAL AMOUNT
@@ -178,20 +214,75 @@ const StoreProvider = ({ children }) => {
   };
 
   // =========================
+  // SAVE GUEST CART IN LOCALSTORAGE
+  // =========================
+  useEffect(() => {
+    if (!token) {
+      localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem("cartItems");
+    }
+  }, [cartItems, token]);
+
+  // =========================
+  // HANDLE TOKEN CHANGES (SYNC/LOAD/LOGOUT)
+  // =========================
+  useEffect(() => {
+    const handleTokenChange = async () => {
+      if (token) {
+        const localCart = localStorage.getItem("cartItems");
+        let guestCart = {};
+        if (localCart) {
+          try {
+            guestCart = JSON.parse(localCart);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        if (Object.keys(guestCart).length > 0) {
+          try {
+            const response = await axios.post(
+              `${url}/api/cart/sync`,
+              { cartData: guestCart },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            if (response.data.success) {
+              setCartItems(response.data.cartData || {});
+              localStorage.removeItem("cartItems");
+            }
+          } catch (error) {
+            console.error("Sync Cart on Token Change Error:", error);
+            await loadCartData(token);
+          }
+        } else {
+          await loadCartData(token);
+        }
+      } else {
+        // Logout or initial guest session
+        const localCart = localStorage.getItem("cartItems");
+        try {
+          setCartItems(localCart ? JSON.parse(localCart) : {});
+        } catch {
+          setCartItems({});
+        }
+      }
+    };
+
+    handleTokenChange();
+  }, [token]);
+
+  // =========================
   // INITIAL LOAD
   // =========================
   useEffect(() => {
     const loadData = async () => {
       await fetchFoodItems();
       await fetchRestaurants();
-
-      const storedToken =
-        localStorage.getItem("token");
-
-      if (storedToken) {
-        setToken(storedToken);
-        await loadCartData(storedToken);
-      }
     };
 
     loadData();
@@ -203,11 +294,13 @@ const StoreProvider = ({ children }) => {
     cartItems,
     token,
     url,
+    showLogin,
     appliedCouponCode,
     couponDiscount,
 
     setToken,
     setCartItems,
+    setShowLogin,
     setAppliedCouponCode,
     setCouponDiscount,
 

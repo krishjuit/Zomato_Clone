@@ -9,12 +9,11 @@ import Verify from './pages/Verify/Verify'
 import MyOrders from './pages/MyOrders/MyOrders'
 import RestaurantDetails from './pages/RestaurantDetails/RestaurantDetails'
 import Search from './pages/Search/Search'
-
-
+import { StoreContext } from './context/StoreContext'
 
 const App = () => {
 
-  const [showLogin, setShowLogin] = React.useState(false);
+  const { showLogin, setShowLogin } = React.useContext(StoreContext);
 
   return (
     <>

@@ -20,6 +20,7 @@ const Cart = () => {
     couponDiscount,
     setAppliedCouponCode,
     setCouponDiscount,
+    setShowLogin,
   } = React.useContext(StoreContext);
 
   const [couponInput, setCouponInput] = React.useState(appliedCouponCode || "");
@@ -104,6 +105,15 @@ const Cart = () => {
     setAppliedCouponCode("");
     setCouponInput("");
     toast.info("Coupon removed");
+  };
+
+  const handleProceedToCheckout = () => {
+    if (!token) {
+      toast.error("Please login to proceed to checkout!");
+      setShowLogin(true);
+    } else {
+      navigate('/order');
+    }
   };
 
   const totalAmount = getTotalCartAmount();
@@ -354,7 +364,7 @@ const Cart = () => {
 
             {/* Checkout Button */}
             <button className="w-full mt-8 h-12 rounded-2xl bg-[#ef4f5f] text-white font-semibold hover:bg-[#d93b4b] hover:shadow-xl transition-all duration-300"
-            onClick={()=>navigate('/order')}>
+            onClick={handleProceedToCheckout}>
               Proceed to Checkout
             </button>
 

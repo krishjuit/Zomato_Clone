@@ -5,7 +5,7 @@ import FoodDisplay from "../../components/FoodDisplay/FoodDisplay";
 import AppDownload from "../../components/AppDownload/AppDownload";
 import Footer from "../../components/Footer/Footer";
 import { StoreContext } from "../../context/StoreContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const RestaurantSkeleton = () => (
@@ -32,6 +32,7 @@ const Home = () => {
   const [category, setCategory] = useState("All");
   const { url } = useContext(StoreContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Paginated restaurant states
   const [restaurants, setRestaurants] = useState([]);
@@ -87,6 +88,28 @@ const Home = () => {
     ogDesc.setAttribute('content', 'Browse premium restaurants, cuisines, and order fresh food directly to your doorstep.');
   }, []);
 
+  // Handle scrolling to sections passed via navigation state
+  useEffect(() => {
+    if (location.state && location.state.scrollTo) {
+      const sectionId = location.state.scrollTo;
+      
+      const timer = setTimeout(() => {
+        if (sectionId === "home") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          const element = document.getElementById(`${sectionId}-section`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+        // Clear location state to prevent repeating scroll on subsequent re-renders or page refreshes
+        window.history.replaceState({}, document.title);
+      }, 150);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
+
   // Stable mock rating generator based on restaurant name
   const getMockRating = (name) => {
     const sum = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -104,11 +127,13 @@ const Home = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="home-section">
       <Header />
       
       {/* Explore Menu Section */}
-      <ExploreMenu category={category} setCategory={setCategory} />
+      <div id="menu-section">
+        <ExploreMenu category={category} setCategory={setCategory} />
+      </div>
 
       {/* Featured Restaurants Section */}
       <div className="px-4 sm:px-8 lg:px-16 py-8" id="restaurants-section">
@@ -285,8 +310,12 @@ const Home = () => {
         <FoodDisplay category={category} />
       </div>
 
-      <AppDownload />
-      <Footer />
+      <div id="mobile-app-section">
+        <AppDownload />
+      </div>
+      <div id="contact-section">
+        <Footer />
+      </div>
     </div>
   );
 };

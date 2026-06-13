@@ -147,3 +147,44 @@ export const deleteFromCart = async (req, res) => {
     });
   }
 };
+
+// Sync cart data
+export const syncCart = async (req, res) => {
+  try {
+    const { cartData } = req.body;
+    const user = await userModel.findById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    let userCart = user.cartData || {};
+
+    if (cartData && typeof cartData === "object") {
+      for (const itemId in cartData) {
+        userCart[itemId] = (userCart[itemId] || 0) + cartData[itemId];
+      }
+    }
+
+    user.cartData = userCart;
+    user.markModified("cartData");
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Cart synced successfully",
+      cartData: user.cartData,
+    });
+  } catch (error) {
+    console.error("Sync Cart Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

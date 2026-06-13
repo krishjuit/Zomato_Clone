@@ -2,6 +2,13 @@ import React from "react";
 import { assets } from "../../assets/assets";
 
 const Header = () => {
+  const handleScroll = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div
       className="relative w-full h-[90vh] overflow-hidden rounded-b-[40px]"
@@ -38,13 +45,19 @@ const Header = () => {
 
           {/* Buttons */}
           <div className="flex flex-wrap gap-4">
-            <button className="px-7 py-3 rounded-full bg-[#ef4f5f] text-white font-semibold shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-300">
+            <button
+              onClick={() => handleScroll("menu-section")}
+              className="px-7 py-3 rounded-full bg-[#ef4f5f] text-white font-semibold shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer"
+            >
               Explore Menu
             </button>
 
-            <button className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/30 text-yellow-400 text-[16px] font-semibold rounded-2xl hover:bg-white hover:text-black hover:-translate-y-1 transition-all duration-300 shadow-md">
-    Download App
-  </button>
+            <button
+              onClick={() => handleScroll("mobile-app-section")}
+              className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/30 text-yellow-400 text-[16px] font-semibold rounded-2xl hover:bg-white hover:text-black hover:-translate-y-1 transition-all duration-300 shadow-md cursor-pointer"
+            >
+              Download App
+            </button>
           </div>
         </div>
       </div>

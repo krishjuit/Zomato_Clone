@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { assets } from "../../assets/assets";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { StoreContext } from "../../context/StoreContext";
 
 const Navbar = ({setShowLogin}) => {
@@ -14,6 +14,29 @@ const Navbar = ({setShowLogin}) => {
     { id: "contact", label: "Contact" },
   ];
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const scrollToSection = (sectionId) => {
+    if (sectionId === "home") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    const element = document.getElementById(`${sectionId}-section`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleMenuClick = (itemId) => {
+    setMenu(itemId);
+    if (location.pathname === "/") {
+      scrollToSection(itemId);
+    } else {
+      navigate("/", { state: { scrollTo: itemId } });
+    }
+  };
+
   const logout=()=>{
     localStorage.removeItem("token");
     setToken("");
@@ -42,7 +65,7 @@ const Navbar = ({setShowLogin}) => {
             {menuItems.map((item) => (
               <li
                 key={item.id}
-                onClick={() => setMenu(item.id)}
+                onClick={() => handleMenuClick(item.id)}
                 className={`relative cursor-pointer text-[15px] font-medium tracking-wide transition-all duration-300 ${
                   menu === item.id
                     ? "text-[#ef4f5f]"
@@ -257,7 +280,7 @@ const Navbar = ({setShowLogin}) => {
               <button
                 key={item.id}
                 onClick={() => {
-                  setMenu(item.id);
+                  handleMenuClick(item.id);
                   setIsMobileMenuOpen(false);
                 }}
                 className={`text-left px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
